@@ -27,3 +27,4 @@ def download_documents_from_journal(session, journal, documents_folder_path):
                 fetched_document_numbers[document_number] = True
             except IOError:
                 logging.warning(f'Unable to download document {document_number}. Skipping to next document...')
+                continue
