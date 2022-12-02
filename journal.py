@@ -1,8 +1,10 @@
 import pandas as pd
 
+import logging
+
 
 def write_journal(journal, export_folder_path):
-    print('downloading journal...')
+    logging.info('downloading journal...')
     records = [{
         'BuchungsId': j['pdeRowNumber'],
         'Buchungsnummer': j['documentNumber'],

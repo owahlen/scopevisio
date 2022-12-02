@@ -1,5 +1,5 @@
 import json
-import sys
+import logging
 import time
 import urllib.parse
 
@@ -31,11 +31,11 @@ class ScopevisioSession(object):
 
     def request(self, method, url, **kwargs):
         # In case a request fails max_attempts are made to fetch the result...
-        max_attempts = 1
+        max_attempts = 5
         for attempt in range(max_attempts):
             acceptable_status_codes = kwargs.pop('acceptable_status_codes', [200])
             headers = kwargs.pop('headers', {})
-            if (self.tokens):
+            if self.tokens:
                 access_token = self.tokens['access_token']
                 headers = headers | {'Authorization': f'Bearer {access_token}'}
             try:
@@ -44,13 +44,12 @@ class ScopevisioSession(object):
                     raise ScopevisioError(response=response)
                 return response
             except RequestException as err:
-                print(
-                    f'{err.__class__.__name__} (status {err.response.status_code}) retry {attempt + 1}/{max_attempts}',
-                    file=sys.stderr)
-                print(err.response.text, file=sys.stderr)
+                logging.warning(
+                    f'{err.__class__.__name__} (status {err.response.status_code}) retry {attempt + 1}/{max_attempts}')
                 if attempt + 1 < max_attempts:
                     time.sleep(1)
                 else:
+                    logging.error(err.response.text)
                     raise err  # rethrow
 
     def request_json(self, method, url, **kwargs):
@@ -87,7 +86,7 @@ class ScopevisioSession(object):
         url = self.BASE_URL + '/journal/' + document_number + '/file'
         response = self.request(method='GET', url=url, headers=headers, acceptable_status_codes=[200, 404])
         if response.status_code == 404:
-            print(f'{document_number}: does not exist')
+            logging.info(f'{document_number}: does not exist')
             return
         filename = document_number
         filename_in_response = self.__get_filename_from_response(response)
@@ -96,7 +95,7 @@ class ScopevisioSession(object):
         path = documents_folder_path.joinpath(filename)
         with path.open('wb') as file:
             file.write(response.content)
-        print(f'{document_number}: downloaded as "{filename}"')
+        logging.info(f'{document_number}: downloaded as "{filename}"')
 
     @staticmethod
     def __get_filename_from_response(response):

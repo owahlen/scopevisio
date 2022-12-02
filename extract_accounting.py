@@ -1,6 +1,7 @@
 import argparse
 
 from accounting import retrieve_accounting
+from logger import configure_logger
 from scopevisio_config import get_scopevisio_config
 
 
@@ -12,6 +13,7 @@ def main(config_filename, export_folder_name, skip_document_download):
 
 
 if __name__ == '__main__':
+    configure_logger()
     parser = argparse.ArgumentParser(description='Extract all accounting data of a company from Scopevisio')
     parser.add_argument('-c', '--configfile', default='scopevisio.ini',
                         help='Path of the file containing the Scopevisio configuration [scopevisio.ini]')

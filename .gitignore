@@ -7,5 +7,8 @@ scopevisio.ini
 # Python
 __pycache__/
 
+# log files
+*.log
+
 # IDE
 .idea/

@@ -1,6 +1,8 @@
+import logging
+from pathlib import Path
+
 from journal import write_journal
 from scopevisio_session import ScopevisioSession
-from pathlib import Path
 
 
 def retrieve_accounting(config, export_folder_name, skip_document_download):
@@ -20,5 +22,8 @@ def download_documents_from_journal(session, journal, documents_folder_path):
     for j in journal:
         document_number = j['documentNumber']
         if document_number not in fetched_document_numbers:
-            session.download_document(document_number, documents_folder_path)
-            fetched_document_numbers[document_number] = True
+            try:
+                session.download_document(document_number, documents_folder_path)
+                fetched_document_numbers[document_number] = True
+            except IOError:
+                logging.warning(f'Unable to download document {document_number}. Skipping to next document...')
