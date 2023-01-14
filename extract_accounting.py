@@ -5,7 +5,7 @@ from logger import configure_logger
 from scopevisio_config import get_scopevisio_config
 
 
-def main(config_filename, export_folder_name, skip_document_download):
+def main(config_filename: str, export_folder_name: str, skip_document_download: bool):
     config = get_scopevisio_config(config_filename)
     retrieve_accounting(config=config,
                         export_folder_name=export_folder_name,

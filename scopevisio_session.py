@@ -2,10 +2,11 @@ import json
 import logging
 import time
 import urllib.parse
+from typing import Dict, Optional
 
 import requests
 import werkzeug.http
-from requests import RequestException
+from requests import RequestException, Response
 
 from scopevisio_api_iterator import ScopevisioApiIterator
 from scopevisio_error import ScopevisioError
@@ -29,7 +30,7 @@ class ScopevisioSession(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def request(self, method, url, **kwargs):
+    def request(self, method, url, **kwargs) -> Response:
         # In case a request fails max_attempts are made to fetch the result...
         max_attempts = 5
         for attempt in range(max_attempts):
@@ -44,21 +45,24 @@ class ScopevisioSession(object):
                     raise ScopevisioError(response=response)
                 return response
             except RequestException as err:
+                status = 'undefined'
+                if err.response and err.response.status_code:
+                    status = err.response.status_code
                 logging.warning(
-                    f'{err.__class__.__name__} (status {err.response.status_code}) retry {attempt + 1}/{max_attempts}')
+                    f'{err.__class__.__name__} (status {status}) retry {attempt + 1}/{max_attempts}')
                 if attempt + 1 < max_attempts:
                     time.sleep(1)
                 else:
                     logging.error(err.response.text)
                     raise err  # rethrow
 
-    def request_json(self, method, url, **kwargs):
+    def request_json(self, method, url, **kwargs) -> Dict:
         response = self.request(method, url, **kwargs)
         if response.headers['content-type'] != 'application/json':
             raise ScopevisioError('response does not contain JSON', response=response)
         return json.loads(response.text)
 
-    def __authenticate(self, config):
+    def __authenticate(self, config) -> Dict:
         payload = {
             'grant_type': 'password',
             'customer': config['customer'],
@@ -74,7 +78,7 @@ class ScopevisioSession(object):
         }
         return self.request_json(method='POST', url=self.BASE_URL + '/token', headers=headers, data=data)
 
-    def get_journal(self):
+    def get_journal(self) -> ScopevisioApiIterator:
         url = self.BASE_URL + '/journal'
         order = ['rowNumber = asc']
         return ScopevisioApiIterator(self, url=url, limit=1000, order=order)
@@ -98,7 +102,7 @@ class ScopevisioSession(object):
         logging.info(f'{document_number}: downloaded as "{filename}"')
 
     @staticmethod
-    def __get_filename_from_response(response):
+    def __get_filename_from_response(response) -> Optional[str]:
         cd = response.headers.get('content-disposition')
         if not cd:
             return None

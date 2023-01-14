@@ -1,11 +1,15 @@
 import logging
 from pathlib import Path
+from typing import MutableMapping
 
 from journal import write_journal
+from scopevisio_api_iterator import ScopevisioApiIterator
 from scopevisio_session import ScopevisioSession
 
 
-def retrieve_accounting(config, export_folder_name, skip_document_download):
+def retrieve_accounting(config: MutableMapping,
+                        export_folder_name: str,
+                        skip_document_download: bool):
     with ScopevisioSession(config) as session:
         export_folder_path = Path(export_folder_name)
         export_folder_path.mkdir(exist_ok=True)
@@ -17,7 +21,9 @@ def retrieve_accounting(config, export_folder_name, skip_document_download):
             download_documents_from_journal(session, journal, documents_folder_path)
 
 
-def download_documents_from_journal(session, journal, documents_folder_path):
+def download_documents_from_journal(session: ScopevisioSession,
+                                    journal: ScopevisioApiIterator,
+                                    documents_folder_path: Path):
     fetched_document_numbers = {}
     for j in journal:
         document_number = j['documentNumber']
